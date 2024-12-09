@@ -74,6 +74,32 @@ router.get(
   }
 );
 
+// GET card by shareable link
+router.get(
+  "/share/:shareableLink",
+  async (req: Request<{ shareableLink: string }>, res: Response): Promise<any> => {
+    const { shareableLink } = req.params;
+
+    try {
+      const card = await prisma.card.findUnique({
+        where: { shareableLink },
+        include: { messages: true },
+      });
+
+      if (!card) {
+        return res.status(404).json({ error: "Card not found." });
+      }
+
+      res.status(200).json(card);
+    } catch (error) {
+      console.error("Error fetching card by shareable link:", error);
+      res.status(500).json({
+        error: "Internal server error while fetching the card by shareable link.",
+      });
+    }
+  }
+);
+
 // UPDATE: Publish a card
 router.put(
   "/:id",
