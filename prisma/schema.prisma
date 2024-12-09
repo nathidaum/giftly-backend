@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Card {
+  id            String        @id @default(uuid())
+  title         String
+  message       String // Message to share the card with contributors
+  templateId    Int // Matches the selected template from the JSON
+  shareableLink String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  isPublished   Boolean       @default(false)
+  contributors  Contributor[]
+}
+
+model Contributor {
+  id        String   @id @default(uuid())
+  name      String
+  message   String
+  gifUrl    String? // Optional URL for a GIF
+  imageUrl  String? // Optional URL for an uploaded image
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id])
+  createdAt DateTime @default(now())
+}
