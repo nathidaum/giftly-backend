@@ -4,11 +4,11 @@ import prisma from "../db/index";
 
 const router = Router();
 
-// Add a message to a card
+// Add a message to a card using shareableLink
 router.post(
-  "/:cardId/messages",
-  async (req: RequestAddMessage, res: Response): Promise<any> => {
-    const { cardId } = req.params;
+  "/share/:shareableLink/messages",
+  async (req: Request<{ shareableLink: string }>, res: Response): Promise<any> => {
+    const { shareableLink } = req.params;
     const { author, text, gifUrl, imageUrl } = req.body;
 
     if (!author) {
@@ -24,15 +24,28 @@ router.post(
     }
 
     try {
+      // Find the card by its shareable link
+      const card = await prisma.card.findUnique({
+        where: { shareableLink },
+      });
+
+      if (!card) {
+        return res.status(404).json({
+          error: "Card not found for the provided shareable link.",
+        });
+      }
+
+      // Add the message to the card
       const message = await prisma.message.create({
         data: {
           author,
           text,
           gifUrl,
           imageUrl,
-          cardId,
+          cardId: card.id, // Use the card ID from the found card
         },
       });
+
       res.status(201).json(message);
     } catch (error) {
       console.error("Error adding message:", error);
